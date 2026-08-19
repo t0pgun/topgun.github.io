@@ -8,12 +8,13 @@
     {
       "symbol": "GOOGL",
       "quantity": 5,
-      "price": 140.50
+      "price": 140.5
     },
     {
       "symbol": "MSFT",
       "quantity": 8,
       "price": 380.75
     }
-  ]
+  ],
+  "lastUpdated": "2026-08-19T02:54:22.602141Z"
 }
