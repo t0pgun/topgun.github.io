@@ -1,33 +1,39 @@
 // Fetch and display data
 async function loadData() {
     try {
-        // Fetch stocks data from GitHub
-        const stocksResponse = await fetch('/topgun.github.io/data/stocks.json');
+        console.log('Loading data...');
+        
+        // Fetch stocks data from GitHub (relative path)
+        const stocksResponse = await fetch('./data/stocks.json');
         const stocksData = await stocksResponse.json();
+        console.log('Stocks loaded:', stocksData);
 
         // Fetch live exchange rate
         const ratesData = await getExchangeRate();
+        console.log('Exchange rate loaded:', ratesData);
 
         displayExchangeRate(ratesData);
         displayStocks(stocksData, ratesData);
         updateTimestamp();
     } catch (error) {
         console.error('Error loading data:', error);
-        document.getElementById('stocksBody').innerHTML = '<tr><td colspan="5">Error loading data</td></tr>';
+        document.getElementById('stocksBody').innerHTML = '<tr><td colspan="5">Error loading data: ' + error.message + '</td></tr>';
     }
 }
 
 async function getExchangeRate() {
-    """
-    Fetch real-time USD to KRW exchange rate
-    Using multiple free APIs as fallback
-    """
+    // Fetch real-time USD to KRW exchange rate
+    // Using multiple free APIs as fallback
+    
     try {
         // Try exchangerate-api.com (free, no key needed)
+        console.log('Trying exchangerate.host...');
         const response = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=KRW');
         const data = await response.json();
+        console.log('exchangerate.host response:', data);
         
         if (data.rates && data.rates.KRW) {
+            console.log('✓ Got rate from exchangerate.host');
             return {
                 rate: data.rates.KRW,
                 change: 0,
@@ -42,10 +48,13 @@ async function getExchangeRate() {
 
     try {
         // Fallback: Try open-exchange-rates (free tier)
+        console.log('Trying openexchangerates.org...');
         const response = await fetch('https://openexchangerates.org/api/latest.json?base=USD&symbols=KRW&app_id=free');
         const data = await response.json();
+        console.log('openexchangerates response:', data);
         
         if (data.rates && data.rates.KRW) {
+            console.log('✓ Got rate from openexchangerates.org');
             return {
                 rate: data.rates.KRW,
                 change: 0,
@@ -60,10 +69,13 @@ async function getExchangeRate() {
 
     try {
         // Fallback: Try fixer.io
+        console.log('Trying fixer.io...');
         const response = await fetch('https://api.fixer.io/latest?base=USD&symbols=KRW');
         const data = await response.json();
+        console.log('fixer.io response:', data);
         
         if (data.rates && data.rates.KRW) {
+            console.log('✓ Got rate from fixer.io');
             return {
                 rate: data.rates.KRW,
                 change: 0,
@@ -88,10 +100,8 @@ async function getExchangeRate() {
 }
 
 async function getStockPrice(symbol) {
-    """
-    Fetch stock price from free APIs
-    Uses Alpha Vantage free tier
-    """
+    // Fetch stock price from free APIs
+    
     try {
         // Using Finnhub free API (no key required for basic usage)
         const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=free`);
