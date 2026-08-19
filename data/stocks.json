@@ -1,0 +1,19 @@
+{
+  "stocks": [
+    {
+      "symbol": "AAPL",
+      "quantity": 10,
+      "price": 150.25
+    },
+    {
+      "symbol": "GOOGL",
+      "quantity": 5,
+      "price": 140.50
+    },
+    {
+      "symbol": "MSFT",
+      "quantity": 8,
+      "price": 380.75
+    }
+  ]
+}
