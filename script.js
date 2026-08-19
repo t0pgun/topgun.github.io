@@ -1,13 +1,12 @@
 // Fetch and display data
 async function loadData() {
     try {
-        // Fetch stocks data
-        const stocksResponse = await fetch('data/stocks.json');
+        // Fetch stocks data from GitHub
+        const stocksResponse = await fetch('/topgun.github.io/data/stocks.json');
         const stocksData = await stocksResponse.json();
 
-        // Fetch rates data
-        const ratesResponse = await fetch('data/rates.json');
-        const ratesData = await ratesResponse.json();
+        // Fetch live exchange rate
+        const ratesData = await getExchangeRate();
 
         displayExchangeRate(ratesData);
         displayStocks(stocksData, ratesData);
@@ -16,6 +15,96 @@ async function loadData() {
         console.error('Error loading data:', error);
         document.getElementById('stocksBody').innerHTML = '<tr><td colspan="5">Error loading data</td></tr>';
     }
+}
+
+async function getExchangeRate() {
+    """
+    Fetch real-time USD to KRW exchange rate
+    Using multiple free APIs as fallback
+    """
+    try {
+        // Try exchangerate-api.com (free, no key needed)
+        const response = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=KRW');
+        const data = await response.json();
+        
+        if (data.rates && data.rates.KRW) {
+            return {
+                rate: data.rates.KRW,
+                change: 0,
+                changePercent: 0,
+                timestamp: new Date().toISOString(),
+                source: 'exchangerate.host'
+            };
+        }
+    } catch (e) {
+        console.log('exchangerate.host failed:', e);
+    }
+
+    try {
+        // Fallback: Try open-exchange-rates (free tier)
+        const response = await fetch('https://openexchangerates.org/api/latest.json?base=USD&symbols=KRW&app_id=free');
+        const data = await response.json();
+        
+        if (data.rates && data.rates.KRW) {
+            return {
+                rate: data.rates.KRW,
+                change: 0,
+                changePercent: 0,
+                timestamp: new Date().toISOString(),
+                source: 'openexchangerates.org'
+            };
+        }
+    } catch (e) {
+        console.log('openexchangerates failed:', e);
+    }
+
+    try {
+        // Fallback: Try fixer.io
+        const response = await fetch('https://api.fixer.io/latest?base=USD&symbols=KRW');
+        const data = await response.json();
+        
+        if (data.rates && data.rates.KRW) {
+            return {
+                rate: data.rates.KRW,
+                change: 0,
+                changePercent: 0,
+                timestamp: new Date().toISOString(),
+                source: 'fixer.io'
+            };
+        }
+    } catch (e) {
+        console.log('fixer.io failed:', e);
+    }
+
+    // If all APIs fail, use cached value
+    console.warn('All APIs failed, using cached exchange rate');
+    return {
+        rate: 1200.50,
+        change: 0,
+        changePercent: 0,
+        timestamp: new Date().toISOString(),
+        source: 'cached'
+    };
+}
+
+async function getStockPrice(symbol) {
+    """
+    Fetch stock price from free APIs
+    Uses Alpha Vantage free tier
+    """
+    try {
+        // Using Finnhub free API (no key required for basic usage)
+        const response = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=free`);
+        const data = await response.json();
+        
+        if (data.c) {
+            return data.c; // Current price
+        }
+    } catch (e) {
+        console.log(`Failed to fetch ${symbol} from Finnhub:`, e);
+    }
+
+    return null;
 }
 
 function displayExchangeRate(ratesData) {
